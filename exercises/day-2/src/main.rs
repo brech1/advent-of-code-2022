@@ -9,6 +9,7 @@ enum Play {
 }
 
 const WIN_POINTS: u32 = 6;
+const DRAW_POINTS: u32 = 3;
 
 // Wrong guess: 9302
 
@@ -44,7 +45,7 @@ fn get_score(round: (Play, Play)) -> u32 {
     let mut score = own as u32;
 
     if opponent == own {
-        return score + opponent as u32;
+        return score + DRAW_POINTS;
     }
 
     match opponent {
