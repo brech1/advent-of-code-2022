@@ -4,12 +4,12 @@ fn main() {
     // Read file
     let contents = fs::read_to_string("input.txt").expect("Should have been able to read the file");
 
-    // Split lines
-    let lines = contents.lines();
-
-    // Assign empty vectors
+    // Initialize variables
     let mut elves_calories: Vec<u32> = Vec::new();
     let mut sum: u32 = 0;
+
+    // Split lines
+    let lines = contents.lines();
 
     // Evaluate calories
     let mut eval_cals = |cals: &str| {
@@ -24,8 +24,20 @@ fn main() {
 
     lines.for_each(|x| eval_cals(x));
 
-    // Get max value
-    let max_cals = elves_calories.iter().max().unwrap();
+    // Push last sum
+    elves_calories.push(sum);
 
-    println!("{max_cals}");
+    // Sort calories
+    elves_calories.sort();
+
+    println!(
+        "The elf with the most cals have {}",
+        elves_calories.last().unwrap()
+    );
+
+    // Part Two - Get the top three elves total cals
+
+    let last_three_cals: u32 = elves_calories.iter().rev().take(3).sum();
+
+    println!("The last three elves carry {} cals", last_three_cals);
 }
