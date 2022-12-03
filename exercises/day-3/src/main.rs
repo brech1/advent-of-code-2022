@@ -11,19 +11,20 @@ fn main() {
     let mut priorities: Vec<u32> = Vec::new();
 
     for line in lines {
-        priorities.push(get_priority(line));
+        let repeated_char = get_repeated_char(line).expect("Same char not found");
+
+        priorities.push(get_priority(repeated_char));
     }
 
     println!("{:?}", priorities.into_iter().sum::<u32>());
 }
 
-fn get_priority(line: &str) -> u32 {
-    let repeated_char = get_repeated_char(line).expect("Same char not found");
-
-    // I'll use the ASCII table to get the priorities
-    // A-Z -> 65-90
-    // a-z -> 97-122
-    let char_ascii_value = repeated_char as u32;
+// Gets the priority for a given char
+// Uses the ASCII table to get the priorities
+// A-Z -> 65-90
+// a-z -> 97-122
+fn get_priority(ch: char) -> u32 {
+    let char_ascii_value = ch as u32;
     let priority: u32;
 
     if char_ascii_value > 96 {
@@ -55,9 +56,9 @@ mod tests {
 
     #[test]
     fn get_your_priorities_right() {
-        assert_eq!(get_priority("aa"), 1);
-        assert_eq!(get_priority("zz"), 26);
-        assert_eq!(get_priority("AA"), 27);
-        assert_eq!(get_priority("ZZ"), 52);
+        assert_eq!(get_priority('a'), 1);
+        assert_eq!(get_priority('z'), 26);
+        assert_eq!(get_priority('A'), 27);
+        assert_eq!(get_priority('Z'), 52);
     }
 }
