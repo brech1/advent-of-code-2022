@@ -29,12 +29,22 @@ fn main() {
         }
     }
 
-    let mut supplies: Supplies = parse_supplies(raw_supplies);
+    let mut supplies: Supplies = parse_supplies(raw_supplies.clone());
 
-    order_supplies(procedure, &mut supplies);
+    let mut part_two_supplies: Supplies = parse_supplies(raw_supplies);
+
+    order_supplies(procedure.clone(), &mut supplies);
+
+    order_with_cratemover_9001(procedure, &mut part_two_supplies);
 
     // Print last element of each stack
     for stack in supplies {
+        println!("{:?}", stack.last());
+    }
+
+    println!("\np2\n");
+
+    for stack in part_two_supplies {
         println!("{:?}", stack.last());
     }
 }
@@ -62,6 +72,31 @@ fn order_supplies(procedure: Vec<&str>, supplies: &mut Supplies) {
 
             supplies[end_stack as usize - 1].push(moving_crate);
         }
+    }
+}
+
+fn order_with_cratemover_9001(procedure: Vec<&str>, supplies: &mut Supplies) {
+    let mut instructions: Vec<Instruction> = Vec::new();
+
+    // Parse instructions
+    for raw_instruction in procedure.iter() {
+        instructions.push(
+            raw_instruction
+                .split_whitespace()
+                .filter_map(|x| x.parse::<u32>().ok())
+                .collect::<Vec<u32>>()
+                .try_into()
+                .expect("bad instruction"),
+        );
+    }
+
+    for [crates, init_stack, end_stack] in instructions {
+        let init_stack_len = supplies[init_stack as usize - 1].len();
+
+        let mut moving_crates =
+            supplies[init_stack as usize - 1].split_off(init_stack_len - crates as usize);
+
+        supplies[end_stack as usize - 1].append(&mut moving_crates);
     }
 }
 
