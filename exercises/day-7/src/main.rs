@@ -72,6 +72,7 @@ impl FileSystem {
 
     fn calculate_size(&self) {
         let mut total_sum: u32 = 0;
+        let mut big_directories: Vec<u32> = Vec::new();
 
         for (dirname, directory) in self.dir.clone().into_iter() {
             // Files size
@@ -81,10 +82,15 @@ impl FileSystem {
                 total_sum += size;
             }
 
-            println!("{dirname} - {size}");
+            // (used space + needed space - total space)
+            if size > (47_048_086 + 30_000_000 - 70_000_000) {
+                big_directories.push(size);
+            }
         }
 
-        println!("{total_sum}");
+        big_directories.sort();
+
+        println!("{big_directories:?}")
     }
 }
 
@@ -119,8 +125,6 @@ impl Directory {
 
         // Sub dir size
         for dir in self.sub_dir.clone() {
-            println!("{dir}");
-
             let fs_dir = fs.dir.get(&dir).expect("404");
 
             let subdir_size = fs_dir.get_size(fs);
