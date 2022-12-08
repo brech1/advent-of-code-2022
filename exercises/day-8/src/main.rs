@@ -49,8 +49,6 @@ impl Forest {
         }
 
         if visibility[0] == true {
-            println!("Left Visible Tree {tree_x} - {tree_y} ({height})");
-
             return true;
         }
 
@@ -62,8 +60,6 @@ impl Forest {
         }
 
         if visibility[1] == true {
-            println!("Right Visible Tree {tree_x} - {tree_y} ({height})");
-
             return true;
         }
 
@@ -84,8 +80,6 @@ impl Forest {
         }
 
         if visibility[2] == true {
-            println!("Top Visible Tree {tree_x} - {tree_y} ({height})");
-
             return true;
         }
 
@@ -99,12 +93,82 @@ impl Forest {
         }
 
         if visibility[3] == true {
-            println!("Bottom Visible Tree {tree_x} - {tree_y} ({height})");
-
             return true;
         }
 
         return false;
+    }
+
+    fn get_highest_scenic_score(&self) -> u32 {
+        // Get edges
+        let x_trees = self.trees[0].len() as u32;
+        let y_trees = self.trees.len() as u32;
+        let mut highest_scenic_score = 0;
+
+        for tree_x in 1..(x_trees - 1) {
+            for tree_y in 1..(y_trees - 1) {
+                let score = self.get_tree_scenic_score(tree_x as usize, tree_y as usize);
+
+                if score > highest_scenic_score {
+                    highest_scenic_score = score;
+                }
+            }
+        }
+
+        return highest_scenic_score;
+    }
+
+    fn get_tree_scenic_score(&self, tree_x: usize, tree_y: usize) -> u32 {
+        // Get tree height
+        let height = self.trees[tree_y][tree_x];
+
+        // Check row score
+        let tree_row = self.trees[tree_y].clone();
+        let mut left_score = tree_x;
+        let mut right_score = tree_row.len() - 1 - tree_x;
+
+        for x in (0..tree_x).rev() {
+            if height <= tree_row[x] {
+                left_score = tree_x - x;
+                break;
+            }
+        }
+
+        for x in (tree_x + 1)..tree_row.len() {
+            if height <= tree_row[x] {
+                right_score = x - tree_x;
+                break;
+            }
+        }
+
+        // Check column visibility
+        // Build Column
+        let mut column: Vec<u32> = Vec::new();
+
+        for row in &self.trees {
+            column.push(row[tree_x]);
+        }
+
+        let mut top_score = tree_y;
+        let mut bottom_score = column.len() - 1 - tree_y;
+
+        // Top
+        for y in (0..tree_y).rev() {
+            if height <= column[y] {
+                top_score = tree_y - y;
+                break;
+            }
+        }
+
+        // Bottom
+        for y in (tree_y + 1)..column.len() {
+            if height <= column[y] {
+                bottom_score = y - tree_y;
+                break;
+            }
+        }
+
+        return (left_score * right_score * top_score * bottom_score) as u32;
     }
 }
 
@@ -118,7 +182,11 @@ fn main() {
 
     let visible_trees = forest.get_visible_trees();
 
-    println!("{visible_trees}");
+    println!("Visible Trees: {visible_trees}");
+
+    let score = forest.get_highest_scenic_score();
+
+    println!("Scenic Score: {score}");
 }
 
 fn get_height_matrix(input: String) -> Matrix<u32> {
