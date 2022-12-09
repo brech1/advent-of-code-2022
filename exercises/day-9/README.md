@@ -248,11 +248,12 @@ s.....
 After simulating the rope, you can count up all of the positions the tail visited at least once. In this diagram, s again marks the starting position (which the tail also visited) and # marks other positions the tail visited:
 
 ```
-..##..
-...##.
-.####.
-....#.
-s###..
+4 ..##..
+3 ...##.
+2 .####.
+1 ....#.
+0 s###..
+  012345
 ```
 
 So, there are 13 positions the tail visited at least once.
