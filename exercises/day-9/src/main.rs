@@ -1,5 +1,7 @@
 use std::{collections::HashMap, fs};
 
+const KNOTS: u32 = 10;
+
 #[derive(Debug, Clone)]
 enum Direction {
     Left,
@@ -165,11 +167,71 @@ fn main() {
     // Init Rope
     let mut rope = Rope::new();
 
-    for line in lines {
+    for line in lines.clone() {
         rope.move_head(parse_command(line));
     }
 
-    println!("{}", rope.tail_history.len());
+    println!("Part one: {}", rope.tail_history.len());
+
+    // Part Two -- Simulate knots with ropes
+
+    // Initialize Ropes
+    let mut ropes: Vec<Rope> = Vec::new();
+
+    for _ in 0..KNOTS {
+        ropes.push(Rope::new());
+    }
+
+    // Execute commands
+
+    for line in lines.clone() {
+        ropes[0].move_head(parse_command(line));
+
+        for i in 1..KNOTS as usize {
+            // Adjust head for the tail of the next rope
+            let next_tail = ropes[i - 1].tail.clone();
+
+            // Get difference from head with next tail
+            let x_difference = ropes[i].head.x.abs_diff(next_tail.x);
+            let y_difference = ropes[i].head.y.abs_diff(next_tail.y);
+
+            if x_difference > 0 {
+                if next_tail.x > ropes[i].head.x {
+                    ropes[i].move_head(Command {
+                        direction: Direction::Right,
+                        steps: x_difference,
+                    });
+                } else {
+                    ropes[i].move_head(Command {
+                        direction: Direction::Left,
+                        steps: x_difference,
+                    });
+                }
+            }
+
+            if y_difference > 0 {
+                if next_tail.y > ropes[i].head.y {
+                    ropes[i].move_head(Command {
+                        direction: Direction::Up,
+                        steps: y_difference,
+                    });
+                } else {
+                    ropes[i].move_head(Command {
+                        direction: Direction::Down,
+                        steps: y_difference,
+                    });
+                }
+            }
+
+            if ropes[i].head != next_tail {
+                println!("not working")
+            }
+        }
+    }
+
+    println!("Part two: {}", ropes[9].tail_history.len());
+
+    // 2909 - Too high
 }
 
 fn parse_command(line: &str) -> Command {
