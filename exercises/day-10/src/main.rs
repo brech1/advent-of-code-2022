@@ -19,14 +19,18 @@ impl Operation {
 
 struct CPU {
     register: i32,
+    cycle_count: u32,
     magic_memory: Vec<i32>,
+    crt: Vec<char>,
 }
 
 impl CPU {
     fn new() -> CPU {
         CPU {
             register: 1,
+            cycle_count: 0,
             magic_memory: vec![1],
+            crt: Vec::new(),
         }
     }
 
@@ -34,7 +38,19 @@ impl CPU {
         for operation in program {
             // Update memory for current instruction cycles
             for _ in 0..operation.instruction as u32 {
+                if self.cycle_count > 39 {
+                    self.cycle_count = 0
+                }
+
                 self.magic_memory.push(self.register);
+
+                if self.cycle_count.abs_diff(self.register as u32) < 2 {
+                    self.crt.push('#');
+                } else {
+                    self.crt.push('.');
+                }
+
+                self.cycle_count += 1;
             }
 
             // Execute instruction
@@ -61,6 +77,17 @@ impl CPU {
 
         println!("total: {}", strength);
     }
+
+    fn draw(&self) {
+        let lines = self
+            .crt
+            .chunks(40)
+            .map(|c| c.iter().collect::<String>())
+            .collect::<Vec<String>>()
+            .join("\n");
+
+        println!("{lines}")
+    }
 }
 
 fn main() {
@@ -85,7 +112,15 @@ fn main() {
 
     cpu.run(program);
 
+    println!("\n-- Part One --\n");
+
     cpu.get_signal_strength(interesting_cycles);
+
+    println!("\n-- Part Two --\n");
+
+    cpu.draw();
+
+    println!("\n-----\n");
 }
 
 fn parse_operation(line: &str) -> Option<Operation> {
