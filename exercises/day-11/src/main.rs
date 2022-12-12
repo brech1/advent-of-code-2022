@@ -14,12 +14,12 @@ struct Operation {
 
 #[derive(Debug, Clone)]
 struct Monkey {
-    id: u32,
-    items: Vec<u32>,
+    id: u64,
+    items: Vec<u64>,
     operation: Operation,
-    test: u32,
-    throw: [u32; 2],
-    simian_shenanigans: u32,
+    test: u64,
+    throw: [u64; 2],
+    simian_shenanigans: u64,
 }
 
 impl Monkey {
@@ -54,51 +54,62 @@ impl Forest {
         self.monkeys.push(monkey);
     }
 
-    fn run(&mut self) {
-        let mut monkeys = self.monkeys.clone();
+    fn run(&mut self, iterations: u64) {
+        let mut monkey_tests: Vec<u64> = Vec::new();
 
-        for i in 0..self.monkeys.len() {
-            for item in monkeys[i].items.clone() {
-                let mut mut_item = item.clone();
-
-                match monkeys[i].operation.instruction {
-                    Instruction::ADD => {
-                        if monkeys[i].operation.value == -1 {
-                            mut_item += item;
-                        } else {
-                            mut_item += monkeys[i].operation.value as u32;
-                        }
-                    }
-                    Instruction::MUL => {
-                        if monkeys[i].operation.value == -1 {
-                            mut_item *= item;
-                        } else {
-                            mut_item *= monkeys[i].operation.value as u32;
-                        }
-                    }
-                };
-
-                let worry_level = mut_item / 3;
-                let divisible_throw = monkeys[i].throw[0] as usize;
-                let not_divisible_throw = monkeys[i].throw[1] as usize;
-
-                if worry_level % monkeys[i].test == 0 {
-                    monkeys[divisible_throw].items.push(worry_level);
-                } else {
-                    monkeys[not_divisible_throw].items.push(worry_level);
-                }
-
-                monkeys[i].simian_shenanigans += 1;
-            }
-
-            monkeys[i].items.clear();
+        for monkey in &self.monkeys {
+            monkey_tests.push(monkey.test);
         }
 
-        self.monkeys = monkeys;
+        let lcm: u64 = least_common_multiple(monkey_tests);
+
+        for _ in 0..iterations {
+            let mut monkeys = self.monkeys.clone();
+
+            for i in 0..self.monkeys.len() {
+                for item in monkeys[i].items.clone() {
+                    let mut mut_item = item.clone();
+
+                    match monkeys[i].operation.instruction {
+                        Instruction::ADD => {
+                            if monkeys[i].operation.value == -1 {
+                                mut_item += item;
+                            } else {
+                                mut_item += monkeys[i].operation.value as u64;
+                            }
+                        }
+                        Instruction::MUL => {
+                            if monkeys[i].operation.value == -1 {
+                                mut_item *= item;
+                            } else {
+                                mut_item *= monkeys[i].operation.value as u64;
+                            }
+                        }
+                    };
+
+                    // let worry_level = mut_item /3; -- Part one
+                    let worry_level = mut_item % lcm;
+                    let divisible_throw = monkeys[i].throw[0] as usize;
+                    let not_divisible_throw = monkeys[i].throw[1] as usize;
+
+                    if worry_level % monkeys[i].test == 0 {
+                        monkeys[divisible_throw].items.push(worry_level);
+                    } else {
+                        monkeys[not_divisible_throw].items.push(worry_level);
+                    }
+
+                    monkeys[i].simian_shenanigans += 1;
+                }
+
+                monkeys[i].items.clear();
+            }
+
+            self.monkeys = monkeys;
+        }
     }
 
     fn get_shenanigans(&self) {
-        let mut count: Vec<u32> = Vec::new();
+        let mut count: Vec<u64> = Vec::new();
 
         for monkey in &self.monkeys {
             count.push(monkey.simian_shenanigans);
@@ -107,6 +118,8 @@ impl Forest {
         count.sort();
 
         count.reverse();
+
+        println!("{:?}", count);
 
         println!("{:?}", count[0] * count[1]);
     }
@@ -127,9 +140,9 @@ fn main() {
         forest.add_monkey(parse_monkey(monkey));
     }
 
-    for _ in 0..20 {
-        forest.run();
-    }
+    // forest.run(20);
+
+    forest.run(10000);
 
     forest.get_shenanigans();
 }
@@ -140,11 +153,11 @@ fn parse_monkey(monkey_chunk: &[&str]) -> Monkey {
         instruction: Instruction::ADD,
         value: 0,
     };
-    let mut parsed_lines: Vec<Vec<u32>> = Vec::new();
+    let mut parsed_lines: Vec<Vec<u64>> = Vec::new();
 
     for (index, line) in monkey_chunk.into_iter().enumerate() {
         let split_line: Vec<&str> = line.split_whitespace().collect();
-        let mut trimmed_line: Vec<u32> = Vec::new();
+        let mut trimmed_line: Vec<u64> = Vec::new();
 
         if index == 2 {
             if split_line[4] == "*" {
@@ -182,4 +195,23 @@ fn parse_monkey(monkey_chunk: &[&str]) -> Monkey {
     monkey.throw = [parsed_lines[4][0], parsed_lines[5][0]];
 
     return monkey;
+}
+
+fn least_common_multiple(numbers: Vec<u64>) -> u64 {
+    if numbers.len() == 1 {
+        return numbers[0];
+    }
+
+    let a = numbers[0];
+    let b = least_common_multiple(numbers.split_at(1).1.to_vec());
+
+    a * b / greatest_common_divisor(a, b)
+}
+
+fn greatest_common_divisor(a: u64, b: u64) -> u64 {
+    if b == 0 {
+        return a;
+    }
+
+    greatest_common_divisor(b, a % b)
 }
