@@ -1,5 +1,4 @@
-use core::time;
-use std::{collections::HashMap, fs, ops::Sub, thread};
+use std::{collections::HashMap, fs};
 
 #[derive(Hash, Eq, PartialEq, Debug, Clone)]
 enum Direction {
@@ -47,6 +46,7 @@ struct HeightMap {
     grid: HashMap<Position, u32>,
     start: Position,
     end: Position,
+    part_two_starts: Vec<Position>,
 }
 
 impl HeightMap {
@@ -55,6 +55,7 @@ impl HeightMap {
             grid: HashMap::new(),
             start: Position { x: 0, y: 0 },
             end: Position { x: 0, y: 0 },
+            part_two_starts: Vec::new(),
         }
     }
 
@@ -110,10 +111,90 @@ impl HeightMap {
                     }
                 }
             }
-            // thread::sleep(time::Duration::from_millis(1000));
         }
 
         println!("Steps: {:?}", mapped_positions.get(&self.end));
+    }
+
+    fn part_two_map(&self) {
+        let mut distances: Vec<u32> = Vec::new();
+
+        for start in self.part_two_starts.clone() {
+            let mut mapped_positions: HashMap<Position, u32> = HashMap::new();
+            // Prevent dobule checking surroundings for already mapped positions
+            let mut surroundings_checked: HashMap<Position, bool> = HashMap::new();
+
+            mapped_positions.insert(start, 0);
+
+            let directions = [
+                Direction::Up,
+                Direction::Down,
+                Direction::Left,
+                Direction::Right,
+            ];
+
+            while !mapped_positions.contains_key(&self.end) {
+                let checked = surroundings_checked.len();
+
+                // Map surroundings
+                for pos in mapped_positions.clone().keys() {
+                    if surroundings_checked.contains_key(pos) {
+                        continue;
+                    }
+
+                    // Get current position distance and elevation
+                    let current_distance = mapped_positions.get(pos).unwrap().clone();
+                    let current_elevation = self.grid.get(pos).unwrap().clone();
+
+                    for direction in directions.clone() {
+                        // Check existence
+                        let new_pos_option = pos.get_new_position(direction);
+
+                        if new_pos_option.is_none() {
+                            continue;
+                        }
+
+                        let new_pos = new_pos_option.unwrap();
+
+                        // Check if visited
+                        if mapped_positions.contains_key(&new_pos) {
+                            continue;
+                        }
+
+                        let test_pos_exists = self.grid.get(&new_pos);
+
+                        if test_pos_exists.is_none() {
+                            continue;
+                        }
+
+                        // Check if can be visited
+                        let new_elevation = test_pos_exists.unwrap().clone();
+
+                        if current_elevation + 1 >= new_elevation {
+                            mapped_positions.insert(new_pos, current_distance + 1);
+                        }
+                    }
+
+                    surroundings_checked.insert(pos.clone(), true);
+                }
+
+                if checked == surroundings_checked.len() {
+                    break;
+                }
+            }
+
+            let dis = mapped_positions.get(&self.end);
+
+            if dis.is_some() {
+                println!("Steps: {:?}", dis);
+
+                distances.push(*dis.unwrap());
+            }
+        }
+
+        distances.sort();
+
+        println!("Steps: {:?}", distances);
     }
 }
 
@@ -131,7 +212,8 @@ fn main() {
     println!("Start: {:?}", height_map.start);
     println!("End {:?}", height_map.end);
 
-    height_map.map();
+    // height_map.map();
+    height_map.part_two_map();
 }
 
 fn load_map(raw_map: Vec<&str>, height_map: &mut HeightMap) {
@@ -147,6 +229,13 @@ fn load_map(raw_map: Vec<&str>, height_map: &mut HeightMap) {
                     height_map.end.x = x as u32;
                     height_map.end.y = y as u32;
                     height_map.add_position(x as u32, y as u32, 'z' as u32)
+                }
+                'a' => {
+                    height_map.part_two_starts.push(Position {
+                        x: x as u32,
+                        y: y as u32,
+                    });
+                    height_map.add_position(x as u32, y as u32, 'a' as u32)
                 }
                 _ => height_map.add_position(x as u32, y as u32, elevation as u32),
             }
