@@ -1,6 +1,6 @@
-use std::{cmp::Ordering, fs};
+use std::{cmp::Ordering, fs, ops::Index};
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Clone)]
 enum Packet {
     List(Vec<Packet>),
     Integer(u32),
@@ -44,11 +44,43 @@ fn main() {
 
         if process_pair(pair) {
             good_packets.push(index);
-            println!("Good packet: {index}");
+            // println!("Good packet: {index}");
         };
     }
 
     println!("Sum: {}", good_packets.iter().sum::<u32>());
+
+    // Sort packets
+
+    let mut all_packets: Vec<&str> = input.split_whitespace().collect();
+
+    all_packets.push("[[2]]");
+    all_packets.push("[[6]]");
+
+    let mut processed_packets: Vec<Packet> = Vec::new();
+
+    for packet in all_packets {
+        let (processed_packet, _) = process_packet(packet);
+
+        processed_packets.push(processed_packet);
+    }
+
+    processed_packets.sort();
+
+    let index_0 = processed_packets
+        .clone()
+        .into_iter()
+        .position(|packet| packet == process_packet("[[2]]").0)
+        .unwrap()
+        + 1;
+
+    let index_1 = processed_packets
+        .into_iter()
+        .position(|packet| packet == process_packet("[[6]]").0)
+        .unwrap()
+        + 1;
+
+    println!("{:?}", index_0 * index_1);
 }
 
 fn process_pair(lines: &str) -> bool {
